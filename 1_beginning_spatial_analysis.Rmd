@@ -3,6 +3,8 @@ title: "LAGOS Spatial Analysis"
 author: "Matthew Ross"
 date: "9/11/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -24,14 +26,20 @@ library(USAboundaries) #USA states and counties
 
 ### First download and then specifically grab the locus (or site lat longs)
 ```{r data-read}
-#Lagos download script
-lagosne_get(version='1.087.1',dest_folder = LAGOSNE:::lagos_path())
+# #Lagos download script
+# lagosne_get(version='1.087.1',dest_folder = LAGOSNE:::lagos_path())
 
-#Load in lagos
-lagos <- lagosne_load()
+#run this before Th
+lagosne_get(dest_folder = LAGOSNE:::lagos_path())
 
-#Grab the lake centroid info
-lake_centers <- lagos$locus
+  
+# #Load in lagos
+# lagos <- lagosne_load()
+# 
+# #Grab the lake centroid info
+# lake_centers <- lagos$locus
+
+load('lake_centers.Rdata')
 ```
 
 
@@ -89,8 +97,14 @@ minnesota_lakes %>%
 
 ## 1) Show a map outline of Iowa and Illinois (similar to Minnesota map upstream)
 
-```{r }
-#Your code here
+```{r, echo=F }
+Iowa_Illinois <- states %>%
+  filter(name %in% c('Iowa','Illinois')) %>%
+  st_transform(2163)
+
+
+mapview(Iowa_Illinois)
+
 ```
 
 
@@ -98,7 +112,15 @@ minnesota_lakes %>%
 ## 2) Subset LAGOS data to these sites, how many sites are in Illinois and Iowa
 combined? How does this compare to Minnesota?
 
-```{r}
+### Illinois and Iowa have 16,466 sites. Minnesota has 29,038 sites.
+
+```{r, echo=F}
+
+#Subset lakes based on spatial position
+ii_lakes <- spatial_lakes[Iowa_Illinois,]
+
+str(ii_lakes)
+str(minnesota_lakes)
 
 ```
 
@@ -108,8 +130,29 @@ combined? How does this compare to Minnesota?
 - Here I want to see a histogram plot with lake size on x-axis and frequency on 
 y axis (check out geom_histogram)
 
-```{r}
+```{r, echo=F}
 
+ii_lakes_name <- ii_lakes%>%
+  mutate(state='Iowa_Illinois')
+
+mn_lakes_name <- minnesota_lakes%>%
+  mutate(state='Minnesota')
+
+long_lake <- rbind(ii_lakes_name, mn_lakes_name)
+
+#ggplot(ii_lakes, aes(lake_area_ha))+
+  #geom_histogram(bins= 30)+
+  #scale_x_log10()
+  
+#ggplot(minnesota_lakes, aes(lake_area_ha))+
+  #geom_histogram(bins= 30)+
+  #scale_x_log10()
+
+ggplot(long_lake, aes(lake_area_ha))+
+  geom_histogram(bins= 30)+
+  scale_x_log10()+
+  labs(x='Lake Area (Ha)', y='Frequency')+
+  facet_wrap(~state, dir="v")
 
 ```
 
@@ -117,7 +160,13 @@ y axis (check out geom_histogram)
 ## 4) Make an interactive plot of lakes in Iowa and Illinois and color them
 by lake area in hectares
 
-```{r}
+```{r, echo=F}
+
+#Plotting the first 1000 lakes
+ii_lakes %>%
+  slice(1:1000) %>%
+  arrange(lake_area_ha) %>%
+  mapview(.,zcol = 'lake_area_ha')
 
 ```
 
@@ -125,4 +174,5 @@ by lake area in hectares
 ## 5) What other data sources might we use to understand how reservoirs and 
 natural lakes vary in size in these three states? 
 
-
+### Other sources of data that we might use to explore the difference in lakes 
+and reservoirs in the three starts are 
